@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.mobile-sdk/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
