@@ -29,4 +29,8 @@ opencode.json
 .gemini/settings.json
 
 .gemini/
+.geminiignore
+.agents/
+.github/
+skills-lock.json
 gha-creds-*.json
