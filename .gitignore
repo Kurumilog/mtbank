@@ -21,3 +21,12 @@ build/
 # Environment
 .env
 .env.local
+
+#personal ai assistant
+.codex
+.opencode
+opencode.json
+.gemini/settings.json
+
+.gemini/
+gha-creds-*.json
