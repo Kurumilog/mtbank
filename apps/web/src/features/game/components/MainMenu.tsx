@@ -6,6 +6,7 @@ import { colors } from "@/shared/theme/colors";
 import { spacing } from "@/shared/theme/spacing";
 
 import { useGameStore } from "../domain/useGameStore";
+import { CharacterPicker } from "./CharacterPicker";
 
 interface LevelNode {
   id: number;
@@ -65,6 +66,7 @@ export function MainMenu() {
       </header>
 
       <main style={styles.pathWrapper}>
+        <CharacterPicker />
         <div style={styles.path} data-testid="level-path">
           {roster.map((node, index) => (
             <LevelBubble

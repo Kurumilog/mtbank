@@ -15,6 +15,7 @@ export function GameScreen() {
   const sessionStars = useGameStore((state) => state.sessionStars);
   const sessionStarsTotal = useGameStore((state) => state.sessionStarsTotal);
   const phase = useGameStore((state) => state.phase);
+  const selectedCharacterId = useGameStore((state) => state.selectedCharacterId);
   const setSessionStars = useGameStore((state) => state.setSessionStars);
   const finishLevel = useGameStore((state) => state.finishLevel);
   const openMenu = useGameStore((state) => state.openMenu);
@@ -60,6 +61,7 @@ export function GameScreen() {
       <div style={styles.stage}>
         <GameCanvas
           level={level}
+          characterId={selectedCharacterId}
           resetKey={resetKey}
           onReady={() => setPhase("playing")}
           onStarsChanged={(collected, total) => setSessionStars(collected, total)}

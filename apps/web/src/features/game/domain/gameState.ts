@@ -15,4 +15,6 @@ export interface GameState {
   sessionStarsTotal: number;
   /** Aggregated rating per level (persisted). */
   levelProgress: Record<number, LevelProgress>;
+  /** Currently selected character id (persisted). */
+  selectedCharacterId: string;
 }

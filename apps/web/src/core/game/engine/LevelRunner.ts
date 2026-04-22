@@ -5,8 +5,9 @@ import { colors } from "@/shared/theme/colors";
 import { GAME_CONSTANTS } from "../constants";
 import type { Direction, LevelData, LevelResult, Vec2 } from "../types";
 import { DIRECTION_VECTORS } from "../types";
-import { buildCollectibles, StarMesh } from "./Collectibles";
+import { buildCollectibles } from "./Collectibles";
 import { buildMaze, isWalkable, MazeBuildResult, slideDestination } from "./Maze";
+import { emitConfetti } from "./ParticleEffects";
 import { Player } from "./Player";
 import { attachSwipeInput } from "./SwipeInput";
 import { createLighting } from "../scene/createLighting";
@@ -35,6 +36,7 @@ export async function runLevel(
   engine: Engine,
   canvas: HTMLCanvasElement,
   level: LevelData,
+  characterId: string,
   callbacks: LevelRunnerCallbacks = {},
 ): Promise<LevelRunnerHandle> {
   const scene = new Scene(engine);
@@ -52,7 +54,7 @@ export async function runLevel(
     maze.height,
   );
 
-  const playerModel = await loadPlayerModel(scene);
+  const playerModel = await loadPlayerModel(scene, characterId);
   const player = new Player(
     playerModel.root,
     maze.startCell,
@@ -66,12 +68,11 @@ export async function runLevel(
   const startTime = performance.now();
 
   const collectStarAt = (cell: Vec2) => {
-    const star: StarMesh | undefined = collectibles.stars.find(
+    const star = collectibles.stars.find(
       (entry) => !entry.collected && entry.cell.x === cell.x && entry.cell.y === cell.y,
     );
     if (!star) return;
-    star.collected = true;
-    star.mesh.dispose();
+    collectibles.collectStar(star);
     collected += 1;
     callbacks.onStarsChanged?.(collected, totalStars);
   };
@@ -81,6 +82,7 @@ export async function runLevel(
     const current = player.cell;
     if (current.x === maze.finishCell.x && current.y === maze.finishCell.y) {
       completed = true;
+      emitConfetti(scene, collectibles.portal.getAbsolutePosition());
       const timeSeconds = (performance.now() - startTime) / 1000;
       const ratio = totalStars === 0 ? 1 : collected / totalStars;
       const rating: 1 | 2 | 3 = ratio >= 1 ? 3 : ratio >= 0.6 ? 2 : 1;

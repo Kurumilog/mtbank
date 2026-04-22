@@ -2,16 +2,18 @@
   "id": 2,
   "name": "Коридоры",
   "width": 11,
-  "height": 9,
+  "height": 11,
   "grid": [
     "WWWWWWWWWWW",
-    "WS..W...*.W",
-    "W.W.W.WWW.W",
-    "W.W...*.W.W",
-    "W.WWWWW.W.W",
-    "W.*.....W.W",
-    "W.W.WWWWW.W",
-    "W.*......FW",
+    "WS........W",
+    "W.WWWWWWW.W",
+    "W*........W",
+    "W.WWWWWWW.W",
+    "W........*W",
+    "W.WWWWWWW.W",
+    "W*........W",
+    "W.WWWWWWW.W",
+    "W........FW",
     "WWWWWWWWWWW"
   ]
 }

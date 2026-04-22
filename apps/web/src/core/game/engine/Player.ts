@@ -9,23 +9,30 @@ import { cellToWorld } from "./Maze";
  *
  * Holds the logical cell position (`cell`) and animates the visual mesh
  * toward the target cell at a constant speed, similar to the slide feel
- * of Tomb of the Mask.
+ * of Tomb of the Mask. Includes subtle squash/stretch while sliding for
+ * extra juice without requiring skeletal animation support in the model.
  */
 export class Player {
   private readonly worldWidth: number;
   private readonly worldHeight: number;
   private readonly mesh: AbstractMesh;
+  private readonly baseScale: Vector3;
 
   private currentCell: Vec2;
   private targetCell: Vec2;
   private worldPosition: Vector3;
   private worldTarget: Vector3;
   private sliding = false;
+  private slideDirection: Direction = "down";
+  private arrivalPulse = 0;
   private elapsed = 0;
-  private facing: Direction = "down";
+
+  /** Bumped each time the player hits a wall — used for camera shake. */
+  private _wallHits = 0;
 
   constructor(mesh: AbstractMesh, spawn: Vec2, width: number, height: number) {
     this.mesh = mesh;
+    this.baseScale = mesh.scaling.clone();
     this.currentCell = { ...spawn };
     this.targetCell = { ...spawn };
     this.worldWidth = width;
@@ -46,6 +53,10 @@ export class Player {
     return this.sliding;
   }
 
+  get wallHitsCount(): number {
+    return this._wallHits;
+  }
+
   /** Commands the player to slide to `destination` facing `direction`. */
   slideTo(destination: Vec2, direction: Direction) {
     if (destination.x === this.currentCell.x && destination.y === this.currentCell.y) {
@@ -56,7 +67,7 @@ export class Player {
     world.y = GAME_CONSTANTS.playerHoverHeight;
     this.worldTarget = world;
     this.sliding = true;
-    this.facing = direction;
+    this.slideDirection = direction;
     this.faceDirection(direction);
   }
 
@@ -70,6 +81,7 @@ export class Player {
     this.worldTarget = world.clone();
     this.mesh.position = world.clone();
     this.sliding = false;
+    this.arrivalPulse = 0;
   }
 
   /**
@@ -86,13 +98,13 @@ export class Player {
       const step = GAME_CONSTANTS.slideSpeed * GAME_CONSTANTS.cellSize * deltaSeconds;
 
       if (distance <= step || distance === 0) {
-        // Snap to target and mark arrival.
-        // Determine which cells we passed over to notify the runner.
         this.notifyCellsBetween(this.currentCell, this.targetCell, onCellEntered);
         this.currentCell = { ...this.targetCell };
         this.worldPosition = this.worldTarget.clone();
         this.mesh.position = this.worldPosition.clone();
         this.sliding = false;
+        this.arrivalPulse = 1;
+        this._wallHits += 1;
       } else {
         const move = direction.normalize().scale(step);
         this.worldPosition = this.worldPosition.add(move);
@@ -100,11 +112,48 @@ export class Player {
       }
     }
 
-    // Subtle idle/slide hover bobbing on Y axis.
+    // Hover bob on Y.
     const bob =
       Math.sin(this.elapsed * GAME_CONSTANTS.playerFloatSpeed) *
       GAME_CONSTANTS.playerFloatAmplitude;
     this.mesh.position.y = GAME_CONSTANTS.playerHoverHeight + bob;
+
+    this.updateSquash(deltaSeconds);
+  }
+
+  /**
+   * Applies stretch along the slide direction while moving and a quick squash
+   * on arrival. Works for any mesh since we manipulate only `scaling`.
+   */
+  private updateSquash(deltaSeconds: number) {
+    const base = this.baseScale;
+    let sx = base.x;
+    let sy = base.y;
+    let sz = base.z;
+
+    if (this.sliding) {
+      const isHorizontal =
+        this.slideDirection === "left" || this.slideDirection === "right";
+      const stretch = 1.15;
+      const squeeze = 0.85;
+      if (isHorizontal) {
+        sx = base.x * stretch;
+        sz = base.z * squeeze;
+      } else {
+        sz = base.z * stretch;
+        sx = base.x * squeeze;
+      }
+      sy = base.y * 0.95;
+    } else if (this.arrivalPulse > 0) {
+      // Arrival squash: wide + flat then ease back to base.
+      const t = this.arrivalPulse; // starts at 1, decays to 0
+      sx = base.x * (1 + 0.25 * t);
+      sz = base.z * (1 + 0.25 * t);
+      sy = base.y * (1 - 0.35 * t);
+      this.arrivalPulse = Math.max(0, this.arrivalPulse - deltaSeconds * 4);
+    }
+
+    this.mesh.scaling.set(sx, sy, sz);
   }
 
   private notifyCellsBetween(
@@ -139,6 +188,6 @@ export class Player {
   }
 
   static createScene(_scene: Scene) {
-    // Placeholder for future: particles, trails, etc.
+    // Placeholder for future: trail ribbons, particle systems, etc.
   }
 }
