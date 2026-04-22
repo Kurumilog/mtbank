@@ -1,27 +1,83 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-import { GAME_CONSTANTS } from "@/core/game/constants";
-import type { GamePhase, GameState } from "./gameState";
+import type { LevelResult } from "@/core/game/types";
 
-type GameStore = GameState & {
+import type { GamePhase, GameState, LevelProgress } from "./gameState";
+
+interface GameStore extends GameState {
+  openMenu: () => void;
+  startLevel: (levelId: number) => void;
   setPhase: (phase: GamePhase) => void;
-  setPetReady: (petReady: boolean) => void;
-  addCoins: (amount: number) => void;
-  addXp: (amount: number) => void;
-  setProgress: (progress: number) => void;
+  setSessionStars: (collected: number, total: number) => void;
+  finishLevel: (result: LevelResult) => void;
+  /** Returns the best rating achieved on a level (0 if not completed). */
+  getStarsForLevel: (levelId: number) => number;
+  /** Total stars across all levels — the number surfaced in mobile banking. */
+  totalStars: () => number;
+}
+
+const initialState: GameState = {
+  phase: "menu",
+  currentLevelId: null,
+  sessionStars: 0,
+  sessionStarsTotal: 0,
+  levelProgress: {},
 };
 
-export const useGameStore = create<GameStore>((set) => ({
-  phase: "boot",
-  coins: GAME_CONSTANTS.defaultCoins,
-  xp: GAME_CONSTANTS.defaultXp,
-  level: GAME_CONSTANTS.defaultLevel,
-  streak: GAME_CONSTANTS.defaultStreak,
-  progress: GAME_CONSTANTS.defaultProgress,
-  petReady: false,
-  setPhase: (phase) => set({ phase }),
-  setPetReady: (petReady) => set({ petReady }),
-  addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
-  addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
-  setProgress: (progress) => set({ progress }),
-}));
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
+
+      openMenu: () =>
+        set({
+          phase: "menu",
+          currentLevelId: null,
+          sessionStars: 0,
+          sessionStarsTotal: 0,
+        }),
+
+      startLevel: (levelId) =>
+        set({
+          phase: "loading",
+          currentLevelId: levelId,
+          sessionStars: 0,
+          sessionStarsTotal: 0,
+        }),
+
+      setPhase: (phase) => set({ phase }),
+
+      setSessionStars: (collected, total) =>
+        set({ sessionStars: collected, sessionStarsTotal: total }),
+
+      finishLevel: (result) => {
+        const existing = get().levelProgress[result.levelId];
+        const nextProgress: LevelProgress = {
+          levelId: result.levelId,
+          stars: Math.max(existing?.stars ?? 0, result.rating),
+          bestTime:
+            existing?.bestTime == null
+              ? result.timeSeconds
+              : Math.min(existing.bestTime, result.timeSeconds),
+        };
+        set({
+          phase: "complete",
+          levelProgress: {
+            ...get().levelProgress,
+            [result.levelId]: nextProgress,
+          },
+        });
+      },
+
+      getStarsForLevel: (levelId) => get().levelProgress[levelId]?.stars ?? 0,
+
+      totalStars: () =>
+        Object.values(get().levelProgress).reduce((sum, p) => sum + p.stars, 0),
+    }),
+    {
+      name: "mtbank-game-progress-v1",
+      partialize: (state) => ({ levelProgress: state.levelProgress }),
+    },
+  ),
+);

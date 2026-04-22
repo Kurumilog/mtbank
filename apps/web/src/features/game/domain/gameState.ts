@@ -1,13 +1,18 @@
-export type GamePhase = "boot" | "loading" | "playing" | "paused" | "summary";
+export type GamePhase = "menu" | "loading" | "playing" | "paused" | "complete";
 
-export type GameAction = "feed" | "train" | "quest" | "shop";
+export interface LevelProgress {
+  levelId: number;
+  stars: number; // 0..3 rating achieved
+  bestTime: number | null;
+}
 
 export interface GameState {
   phase: GamePhase;
-  coins: number;
-  xp: number;
-  level: number;
-  streak: number;
-  progress: number;
-  petReady: boolean;
+  currentLevelId: number | null;
+  /** Stars currently collected in the active level session. */
+  sessionStars: number;
+  /** Total stars available in the active level. */
+  sessionStarsTotal: number;
+  /** Aggregated rating per level (persisted). */
+  levelProgress: Record<number, LevelProgress>;
 }

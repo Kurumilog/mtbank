@@ -1,0 +1,19 @@
+{
+  "id": 3,
+  "name": "Перекрёсток",
+  "width": 11,
+  "height": 11,
+  "grid": [
+    "WWWWWWWWWWW",
+    "WS...*....W",
+    "W.WWW.WWW.W",
+    "W.W.....W.W",
+    "W.W.WWW.W.W",
+    "W*..W*W...W",
+    "W.W.WWW.W.W",
+    "W.W.....W.W",
+    "W.WWW.WWW.W",
+    "W....*...FW",
+    "WWWWWWWWWWW"
+  ]
+}

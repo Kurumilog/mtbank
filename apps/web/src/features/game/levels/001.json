@@ -1,0 +1,17 @@
+{
+  "id": 1,
+  "name": "Первые шаги",
+  "width": 9,
+  "height": 9,
+  "grid": [
+    "WWWWWWWWW",
+    "WS.....*W",
+    "W.WWWWW.W",
+    "W.*...*.W",
+    "W.W.W.W.W",
+    "W.*...*.W",
+    "W.WWWWW.W",
+    "W*.....FW",
+    "WWWWWWWWW"
+  ]
+}

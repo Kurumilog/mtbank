@@ -1,111 +1,100 @@
 import { useEffect, useRef } from "react";
 
-import type { Scene } from "@babylonjs/core";
+import type { Engine } from "@babylonjs/core";
 
+import { runLevel, type LevelRunnerHandle } from "@/core/game/engine/LevelRunner";
+import type { LevelData, LevelResult } from "@/core/game/types";
 import { colors } from "@/shared/theme/colors";
-import { useGameStore } from "../domain/useGameStore";
 
-export function GameCanvas() {
+interface GameCanvasProps {
+  level: LevelData;
+  onStarsChanged: (collected: number, total: number) => void;
+  onLevelComplete: (result: LevelResult) => void;
+  onReady: () => void;
+  /** Bumping this prop forces a full runner restart (used by "Play again"). */
+  resetKey: number;
+}
+
+export function GameCanvas({
+  level,
+  onStarsChanged,
+  onLevelComplete,
+  onReady,
+  resetKey,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const setPhase = useGameStore((state) => state.setPhase);
-  const setPetReady = useGameStore((state) => state.setPetReady);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    if (!canvas || !container) {
-      return undefined;
-    }
+    let engine: Engine | null = null;
+    let runner: LevelRunnerHandle | null = null;
+    let disposed = false;
 
-    setPhase("loading");
-
-    let scene: Scene | null = null;
-    let isDisposed = false;
-    let engine: import("@babylonjs/core").Engine | null = null;
-
-    const resizeCanvas = () => {
-      engine?.resize();
-    };
-
+    const resizeCanvas = () => engine?.resize();
     const resizeObserver = new ResizeObserver(resizeCanvas);
     resizeObserver.observe(container);
+    window.addEventListener("resize", resizeCanvas);
 
-    const start = async () => {
+    const boot = async () => {
+      const { Engine: BabylonEngine } = await import("@babylonjs/core");
+      if (disposed) return;
+
+      engine = new BabylonEngine(canvas, true, {
+        adaptToDeviceRatio: true,
+        preserveDrawingBuffer: false,
+        stencil: true,
+      });
+
       try {
-        const [{ Engine }, { createTopDownScene }] = await Promise.all([
-          import("@babylonjs/core"),
-          import("@/core/game/scene/createTopDownScene"),
-        ]);
-
-        if (isDisposed) {
-          return;
-        }
-
-        engine = new Engine(canvas, true, {
-          adaptToDeviceRatio: true,
-          preserveDrawingBuffer: false,
-          stencil: true,
-        });
-
-        const nextScene = await createTopDownScene(engine);
-
-        if (isDisposed) {
-          nextScene.dispose();
-          return;
-        }
-
-        scene = nextScene;
-        setPetReady(true);
-        setPhase("playing");
-
-        engine.runRenderLoop(() => {
-          nextScene.render();
+        runner = await runLevel(engine, canvas, level, {
+          onStarsChanged,
+          onLevelComplete,
+          onReady,
         });
       } catch (error) {
-        console.error("Failed to start the Babylon scene", error);
-        setPhase("paused");
+        console.error("Failed to start level", error);
       }
     };
 
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
-    void start();
+    void boot();
 
     return () => {
-      isDisposed = true;
+      disposed = true;
       window.removeEventListener("resize", resizeCanvas);
       resizeObserver.disconnect();
-      engine?.stopRenderLoop();
-      scene?.dispose();
+      runner?.dispose();
       engine?.dispose();
-      setPetReady(false);
-      setPhase("boot");
     };
-  }, [setPetReady, setPhase]);
+    // resetKey triggers a full remount-like re-run of the effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level, resetKey]);
 
   return (
-    <div ref={containerRef} style={styles.container}>
-      <canvas ref={canvasRef} style={styles.canvas} />
+    <div ref={containerRef} style={styles.container} data-testid="game-canvas-container">
+      <canvas ref={canvasRef} style={styles.canvas} data-testid="game-canvas" />
     </div>
   );
 }
 
 const styles = {
   container: {
-    background: colors.canvas,
-    borderRadius: 32,
-    boxShadow: "0 24px 60px rgba(0, 0, 0, 0.3)",
+    background: colors.paper,
     flex: 1,
+    height: "100%",
     minHeight: 0,
     overflow: "hidden",
     position: "relative" as const,
     touchAction: "none" as const,
+    width: "100%",
   },
   canvas: {
     display: "block",
     height: "100%",
+    outline: "none",
     width: "100%",
   },
 };

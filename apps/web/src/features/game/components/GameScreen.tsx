@@ -1,210 +1,152 @@
-import { useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 
-import type { HostBridge } from "@/core/bridge/hostBridge";
-import { createHostBridge } from "@/core/bridge/hostBridge";
+import { findLevel } from "@/features/game/levels/registry";
+import type { LevelResult } from "@/core/game/types";
 import { colors } from "@/shared/theme/colors";
 import { spacing } from "@/shared/theme/spacing";
-import { Panel } from "@/shared/ui/Panel";
+
+import { useGameStore } from "../domain/useGameStore";
 import { GameCanvas } from "./GameCanvas";
 import { GameHud } from "./GameHud";
-import { useGameStore } from "../domain/useGameStore";
+import { LevelCompleteOverlay } from "./LevelCompleteOverlay";
 
 export function GameScreen() {
-  const bridgeRef = useRef<HostBridge | null>(null);
-  const { phase, coins, xp, level, streak, progress } = useGameStore((state) => ({
-    phase: state.phase,
-    coins: state.coins,
-    xp: state.xp,
-    level: state.level,
-    streak: state.streak,
-    progress: state.progress,
-  }));
+  const currentLevelId = useGameStore((state) => state.currentLevelId);
+  const sessionStars = useGameStore((state) => state.sessionStars);
+  const sessionStarsTotal = useGameStore((state) => state.sessionStarsTotal);
+  const phase = useGameStore((state) => state.phase);
+  const setSessionStars = useGameStore((state) => state.setSessionStars);
+  const finishLevel = useGameStore((state) => state.finishLevel);
+  const openMenu = useGameStore((state) => state.openMenu);
+  const startLevel = useGameStore((state) => state.startLevel);
+  const setPhase = useGameStore((state) => state.setPhase);
 
-  if (!bridgeRef.current) {
-    bridgeRef.current = createHostBridge();
+  const [resetKey, setResetKey] = useState(0);
+  const [lastResult, setLastResult] = useState<LevelResult | null>(null);
+
+  const level = useMemo(
+    () => (currentLevelId != null ? findLevel(currentLevelId) : undefined),
+    [currentLevelId],
+  );
+
+  if (!level) {
+    // Defensive: fall back to the menu if the store has an invalid level id.
+    openMenu();
+    return null;
   }
 
-  const bridge = bridgeRef.current;
+  const handleLevelComplete = (result: LevelResult) => {
+    setLastResult(result);
+    finishLevel(result);
+  };
 
-  useEffect(() => {
-    bridge.ready();
-    bridge.send("game:ready", {
-      platform: bridge.platform,
-    });
-  }, [bridge]);
+  const handleRetry = () => {
+    setLastResult(null);
+    startLevel(level.id);
+    setResetKey((key) => key + 1);
+  };
 
-  useEffect(() => {
-    bridge.send("game:state", {
-      coins,
-      level,
-      phase,
-      progress,
-      streak,
-      xp,
-    });
-  }, [bridge, coins, level, phase, progress, streak, xp]);
+  const nextLevel = findLevel(level.id + 1);
 
-  const platformLabel =
-    bridge.platform === "telegram"
-      ? "Telegram Mini App"
-      : bridge.platform === "webview"
-        ? "WebView"
-        : "Browser";
+  const handleNext = () => {
+    if (!nextLevel) return;
+    setLastResult(null);
+    startLevel(nextLevel.id);
+    setResetKey((key) => key + 1);
+  };
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div>
-          <div style={styles.kicker}>MTBank Game</div>
-          <h1 style={styles.title}>Top-down pet arena</h1>
-          <p style={styles.subtitle}>Babylon.js shell ready for WebView and Telegram Mini App hosting.</p>
-        </div>
+    <div style={styles.page} data-testid="game-screen">
+      <div style={styles.stage}>
+        <GameCanvas
+          level={level}
+          resetKey={resetKey}
+          onReady={() => setPhase("playing")}
+          onStarsChanged={(collected, total) => setSessionStars(collected, total)}
+          onLevelComplete={handleLevelComplete}
+        />
 
-        <Panel style={styles.platformPanel}>
-          <div style={styles.platformLabel}>{platformLabel}</div>
-          <div style={styles.platformHint}>{phase === "playing" ? "Scene live" : "Booting scene"}</div>
-        </Panel>
-      </header>
+        <GameHud
+          levelId={level.id}
+          levelName={level.name}
+          stars={sessionStars}
+          totalStars={sessionStarsTotal}
+          onExit={openMenu}
+        />
 
-      <main style={styles.stageLayout}>
-        <div style={styles.stageSurface}>
-          <GameCanvas />
-
-          <div style={styles.overlayLeft}>
-            <GameHud platform={platformLabel} />
+        {phase === "loading" && (
+          <div style={styles.loading} data-testid="loading-overlay">
+            <div style={styles.loadingDot} />
+            <span>Загружаем уровень…</span>
           </div>
-        </div>
+        )}
 
-        <Panel style={styles.actionsPanel}>
-          <div style={styles.actionsTitle}>Bridge actions</div>
-          <div style={styles.actionsRow}>
-            <ActionButton
-              label="Feed"
-              onClick={() => bridge.send("game:action", { action: "feed" })}
-            />
-            <ActionButton
-              label="Train"
-              onClick={() => bridge.send("game:action", { action: "train" })}
-            />
-            <ActionButton
-              label="Quest"
-              onClick={() => bridge.send("game:action", { action: "quest" })}
-            />
-          </div>
-        </Panel>
-      </main>
+        {phase === "complete" && lastResult && (
+          <LevelCompleteOverlay
+            result={lastResult}
+            hasNextLevel={Boolean(nextLevel)}
+            onRetry={handleRetry}
+            onNext={handleNext}
+            onMenu={openMenu}
+          />
+        )}
+
+        <div style={styles.hint} data-testid="game-hint">
+          Свайп ↑ ↓ ← → — персонаж скользит до стены
+        </div>
+      </div>
     </div>
-  );
-}
-
-type ActionButtonProps = {
-  label: string;
-  onClick: () => void;
-};
-
-function ActionButton({ label, onClick }: ActionButtonProps) {
-  return (
-    <button type="button" onClick={onClick} style={styles.actionButton}>
-      {label}
-    </button>
   );
 }
 
 const styles = {
   page: {
-    background: `radial-gradient(circle at top, rgba(55, 197, 138, 0.18), transparent 35%), linear-gradient(180deg, #081321 0%, ${colors.canvas} 100%)`,
-    color: colors.text,
+    background: `radial-gradient(circle at top, ${colors.paperSoft} 0%, ${colors.paper} 55%, ${colors.paperDeep} 100%)`,
+    color: colors.ink,
     display: "flex",
     flexDirection: "column" as const,
-    gap: spacing.lg,
     height: "100%",
-    padding: spacing.lg,
+    width: "100%",
   },
-  header: {
-    alignItems: "flex-start",
-    display: "flex",
-    justifyContent: "space-between",
-    gap: spacing.md,
-  },
-  kicker: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: 0.12,
-    marginBottom: 4,
-    textTransform: "uppercase" as const,
-  },
-  title: {
-    fontSize: 28,
-    lineHeight: 1.05,
-    margin: 0,
-  },
-  subtitle: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 1.5,
-    marginTop: 8,
-    maxWidth: 720,
-  },
-  platformPanel: {
-    alignItems: "flex-start",
-    display: "flex",
-    gap: 4,
-    minWidth: 170,
-  },
-  platformLabel: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: 700,
-  },
-  platformHint: {
-    color: colors.muted,
-    fontSize: 12,
-  },
-  stageLayout: {
-    display: "grid",
-    gap: spacing.lg,
-    gridTemplateColumns: "minmax(0, 1fr)",
+  stage: {
     flex: 1,
-    minHeight: 0,
-  },
-  stageSurface: {
-    display: "flex",
     minHeight: 0,
     position: "relative" as const,
-    flex: 1,
+    width: "100%",
   },
-  overlayLeft: {
-    left: spacing.lg,
-    maxWidth: 360,
-    position: "absolute" as const,
-    top: spacing.lg,
-    width: "min(100%, 360px)",
-  },
-  actionsPanel: {
+  loading: {
+    alignItems: "center",
+    background: "rgba(244, 234, 214, 0.6)",
+    bottom: 0,
+    color: colors.ink,
     display: "flex",
-    gap: spacing.md,
-  },
-  actionsTitle: {
-    color: colors.muted,
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: 700,
-    letterSpacing: 0.08,
-    textTransform: "uppercase" as const,
-  },
-  actionsRow: {
-    display: "grid",
     gap: spacing.sm,
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    justifyContent: "center",
+    left: 0,
+    position: "absolute" as const,
+    right: 0,
+    top: 0,
+    zIndex: 5,
   },
-  actionButton: {
-    background: `linear-gradient(180deg, ${colors.accent} 0%, ${colors.accentStrong} 100%)`,
-    border: "none",
-    borderRadius: 16,
-    color: colors.canvas,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 700,
-    padding: `${spacing.md}px ${spacing.lg}px`,
+  loadingDot: {
+    animation: "pulse 1.1s ease-in-out infinite",
+    background: colors.accent,
+    borderRadius: "50%",
+    height: 14,
+    width: 14,
+  },
+  hint: {
+    bottom: spacing.md,
+    color: colors.inkSoft,
+    fontSize: 13,
+    fontWeight: 600,
+    left: "50%",
+    pointerEvents: "none" as const,
+    position: "absolute" as const,
+    textAlign: "center" as const,
+    transform: "translateX(-50%)",
+    whiteSpace: "nowrap" as const,
   },
 };

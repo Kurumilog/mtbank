@@ -1,0 +1,19 @@
+{
+  "id": 4,
+  "name": "Змейка",
+  "width": 11,
+  "height": 11,
+  "grid": [
+    "WWWWWWWWWWW",
+    "WS........W",
+    "WWWWWWWWW.W",
+    "W.......*.W",
+    "W.WWWWWWWWW",
+    "W*........W",
+    "WWWWWWWWW.W",
+    "W......*..W",
+    "W.WWWWWWWWW",
+    "W........FW",
+    "WWWWWWWWWWW"
+  ]
+}

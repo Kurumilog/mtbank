@@ -1,14 +1,28 @@
+/**
+ * Global tuning constants for the maze game.
+ *
+ * Edit these to change the feel of the game without touching engine code.
+ */
 export const GAME_CONSTANTS = {
-  arenaSize: 48,
-  cameraRadius: 26,
-  cameraBeta: 1.12,
-  petScale: 1.8,
-  petHoverHeight: 0.85,
-  petFloatAmplitude: 0.1,
-  petFloatSpeed: 2.4,
-  defaultCoins: 12228,
-  defaultXp: 41,
-  defaultLevel: 8,
-  defaultStreak: 12,
-  defaultProgress: 0.418,
+  /** Side length of a single maze cell in world units. */
+  cellSize: 2,
+  /** Height of the wall blocks. */
+  wallHeight: 1.6,
+  /** How high above the floor the player model floats. */
+  playerHoverHeight: 0.8,
+  /** Subtle vertical bobbing parameters for the idle player. */
+  playerFloatAmplitude: 0.06,
+  playerFloatSpeed: 2.6,
+  /** Player slide speed in cells per second. */
+  slideSpeed: 14,
+  /** Minimum pointer travel (in CSS px) to register a swipe. */
+  swipeMinDistance: 20,
+  /** Camera tilt (beta). Lower = more top-down. PI/8 ≈ 22°. */
+  cameraBeta: Math.PI / 8,
+  /** Camera azimuth (alpha). */
+  cameraAlpha: -Math.PI / 2,
+  /** Camera distance multiplier applied after fitting the arena to the viewport. */
+  cameraRadiusFactor: 1.08,
+  /** Total number of story levels in the game. */
+  totalLevels: 60,
 } as const;
