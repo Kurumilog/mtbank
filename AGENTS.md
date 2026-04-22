@@ -1,87 +1,105 @@
-# MTBank — Root Instructions
+# MTBank - Workspace Instructions
+
+## Scope and Priority
+- Applies to the whole workspace.
+- More specific `AGENTS.md` files override this one when they are more specific.
+- System, developer, and direct user instructions always win over workspace instructions.
+- If a request is ambiguous or instructions conflict, stop and ask before editing.
 
 ## Communication
-- Code, comments, commits, variables: **English only**
-- Communicate with user: **Russian**
+- Code, comments, commits, and variables: English only.
+- Communicate with the user in Russian.
 
-## Project Structure
+## Behavioral Guidelines
+### Think Before Coding
+- State assumptions explicitly.
+- If multiple interpretations exist, name them instead of guessing.
+- Prefer the simplest workable approach.
+- Push back when a request is contradictory or overcomplicated.
+- If something is unclear, ask before you edit.
+
+### Simplicity First
+- Implement only what was asked.
+- Do not add speculative abstractions, configurability, or error handling for impossible cases.
+- If the solution is growing without benefit, cut it down.
+
+### Surgical Changes
+- Touch only the code that the request requires.
+- Do not refactor unrelated code, comments, formatting, or names.
+- Match the existing style unless the task requires a change.
+- Remove imports, variables, or functions only when your own change makes them unused.
+- If you notice unrelated dead code, mention it instead of deleting it.
+- Every changed line should trace directly to the user's request.
+
+### Goal-Driven Execution
+- Turn multi-step work into short, verifiable steps.
+- State a brief plan with explicit verification when the task spans more than one step.
+- Do not mark the work done until the relevant verification passes.
+
+## Repository Structure
 ```
 mtbank/
 ├── mobile/   ← Flutter (Dart)
 └── api/      ← NestJS (TypeScript)
 ```
 
-## Git Workflow
-After every feature or fix:
-1. `dart analyze` (mobile) or `npm run lint` (api) — zero errors required
-2. `git add -A && git commit -m "type(scope): description"`
-3. Push only after explicit user confirmation: `git push origin <branch>`
-4. After push — save to SuperMemory (see below)
+## Domain Instructions
+- Follow [api/AGENTS.md](api/AGENTS.md) for NestJS work.
+- Follow [mobile/AGENTS.md](mobile/AGENTS.md) for Flutter work.
+- Do not duplicate feature-specific rules here unless they apply across the whole workspace.
 
-### Conventional Commits
-`type(scope): description`
-- Types: `feat` `fix` `refactor` `style` `test` `chore`
-- Mobile scopes: `auth` `gamification` `transactions` `profile` `home` `core` `ui`
-- API scopes: `auth` `users` `gamification` `transactions` `config` `common`
+## Working Process
+- Gather context before editing when the task is not trivial.
+- Make the smallest change that solves the request.
+- After each feature or fix, verify the relevant stack:
+  - api: run `npm run lint`.
+  - mobile: run `dart analyze`.
+- If verification fails, fix the problem before finishing.
+- Use conventional commits for completed feature or fix work.
+- Never push without explicit user confirmation.
 
-### Branches
-- `main` — stable only, never commit directly
-- `mobile` — Flutter work
-- `backend` — NestJS work
+## Memory and Project Context
+- Use SuperMemory MCP (`mcp_supermemory_*` tools) for persistent project memory.
+- Project scope: always use `containerTag: "mtbank"` in every memory call.
 
----
-
-## SuperMemory Workflow
-
-**Project scope:** always use `containerTag: "mtbank"` in every memory call.
-
-### Session START — always run these two first, before doing anything:
+### Session Start
+- Always run these two first, before doing anything:
 ```
-mcp3_recall(query: "mtbank latest decisions stack context", containerTag: "mtbank")
-mcp3_recall(query: "last commit branch status", containerTag: "mtbank")
+mcp_supermemory_recall(query: "mtbank latest decisions stack context", containerTag: "mtbank")
+mcp_supermemory_recall(query: "last commit branch status", containerTag: "mtbank")
 ```
-Use results to understand current project state before writing any code.
+- Use the results to understand the current project state before writing any code.
 
-If unsure which project is active:
+### Active Project
+- If you are unsure which project is active:
 ```
-mcp3_listProjects()
-mcp3_whoAmI()
+mcp_supermemory_listProjects()
+mcp_supermemory_whoAmI()
 ```
 
-### Save after every push — silently, do not mention to user:
+### Save Rules
+- Save after every push, silently, and do not mention it to the user:
 ```
-mcp3_memory(action: "save", content: "COMMIT <hash>: <what was done> | Branch: <branch> | Files: <list>", containerTag: "mtbank")
+mcp_supermemory_memory(action: "save", content: "COMMIT <hash>: <what was done> | Branch: <branch> | Files: <list>", containerTag: "mtbank")
 ```
+- Save after architectural decisions, silently:
+```
+mcp_supermemory_memory(action: "save", content: "DECISION: <what> | Context: <why> | Affected: <path>", containerTag: "mtbank")
+```
+- Save after API contract changes, silently:
+```
+mcp_supermemory_memory(action: "save", content: "CONTRACT: <METHOD> /path | Body: <fields> | Response: <shape>", containerTag: "mtbank")
+```
+- Forget outdated information when a decision is reversed or a contract changes:
+```
+mcp_supermemory_memory(action: "forget", content: "<what to remove>", containerTag: "mtbank")
+```
+- Use these save types: `COMMIT`, `DECISION`, `FIX`, `FEAT`, `CONTRACT`, `BLOCKER`.
+- Do not save WIP, code that does not compile yet, minor style changes, or duplicates.
 
-### Save after architectural decisions — silently:
-```
-mcp3_memory(action: "save", content: "DECISION: <what> | Context: <why> | Affected: <path>", containerTag: "mtbank")
-```
-
-### Save after API contract changes — silently:
-```
-mcp3_memory(action: "save", content: "CONTRACT: <METHOD> /path | Body: <fields> | Response: <shape>", containerTag: "mtbank")
-```
-
-### Forget outdated information:
-```
-mcp3_memory(action: "forget", content: "<what to remove>", containerTag: "mtbank")
-```
-Use when a decision is reversed or a contract changes — remove the old entry first, then save the new one.
-
-### Save types (prefix every save with type):
-`COMMIT` `DECISION` `FIX` `FEAT` `CONTRACT` `BLOCKER`
-
-### Do NOT save:
-- WIP or code that doesn't compile yet
-- Minor style/formatting changes
-- Duplicates of what's already in memory
-
----
-
-## What NOT to do
-- Never push to `main` directly
-- Never push without user confirmation
-- Never ignore lint/analyze errors before commit
-- Never skip SuperMemory recall at session start
-- Never save to memory without `containerTag: "mtbank"`
+## What Not To Do
+- Never push to `main` directly.
+- Never invent tools, commands, file paths, package names, or project state.
+- Never make unrelated edits or cleanup.
+- Never ignore lint or analyze errors.
+- Never skip verification.
