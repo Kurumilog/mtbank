@@ -6,6 +6,9 @@
     "plugins": [
       "expo-router",
       "expo-asset"
-    ]
+    ],
+    "android": {
+      "package": "com.anonymous.mtbankmobile"
+    }
   }
 }

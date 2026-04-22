@@ -29,10 +29,13 @@ pnpm-debug.log*
 .packages
 
 # Android / iOS generated files
-android/.gradle/
-android/build/
-ios/Pods/
-ios/build/
+android/
+apps/mobile/android/.gradle/
+apps/mobile/android/build/
+apps/mobile/android/app/build/
+apps/mobile/android/local.properties
+ios/
+*.tsbuildinfo
 
 # Dependencies
 node_modules/

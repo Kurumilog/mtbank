@@ -39,13 +39,13 @@
 ## Repository Structure
 ```
 mtbank/
-├── mobile/   ← Flutter (Dart)
+├── apps/mobile/   ← React Native (Expo)
 └── api/      ← NestJS (TypeScript)
 ```
 
 ## Domain Instructions
 - Follow [api/AGENTS.md](api/AGENTS.md) for NestJS work.
-- Follow [mobile/AGENTS.md](mobile/AGENTS.md) for Flutter work.
+- Mobile app lives in `apps/mobile/` and uses React Native with Expo.
 - Do not duplicate feature-specific rules here unless they apply across the whole workspace.
 
 ## Working Process
@@ -53,7 +53,7 @@ mtbank/
 - Make the smallest change that solves the request.
 - After each feature or fix, verify the relevant stack:
   - api: run `npm run lint`.
-  - mobile: run `dart analyze`.
+  - mobile: run TypeScript or Expo-appropriate verification for `apps/mobile`.
 - If verification fails, fix the problem before finishing.
 - Use conventional commits for completed feature or fix work.
 - Never push without explicit user confirmation.

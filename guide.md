@@ -22,13 +22,9 @@ sdkmanager "platforms;android-36"
 sdkmanager "build-tools;28.0.3"
 sdkmanager --licenses
 
-# 5. Flutter — через git clone (надежнее wget)
-cd ~/
-git clone https://github.com/flutter/flutter.git -b stable
-echo 'export PATH=$PATH:$HOME/flutter/bin' >> ~/.zshrc
-source ~/.zshrc
+# 5. React Native / Expo CLI
+npm install -g expo
 
-# 6. Привязать Flutter к SDK
-flutter config --android-sdk $ANDROID_HOME
-flutter doctor --android-licenses
-flutter doctor
+# 6. Проверка окружения Android для Expo / React Native
+adb --version
+npx expo --version

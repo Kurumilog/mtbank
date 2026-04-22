@@ -86,7 +86,7 @@ Never expose raw Supabase errors, stack traces, or internal field names to the c
 - Use `async/await` everywhere - no callbacks.
 - For Supabase queries: call directly from the service, no ORM needed.
 - Avoid N+1: use `.select()` with joins in Supabase instead of multiple queries.
-- For leaderboard realtime: let Flutter handle Supabase Realtime directly - no WebSocket in NestJS needed.
+- For leaderboard realtime: let the React Native client handle Supabase Realtime directly - no WebSocket in NestJS needed.
 
 ## Mobile Contract
 - Record a contract note in workspace memory after every new or changed endpoint.

@@ -1,20 +1,22 @@
 # MTBank Clone MVP
 
-Monorepo project with Flutter mobile app and NestJS API backend.
+Monorepo project with React Native mobile app and NestJS API backend.
 
 ## Structure
 
-- `mobile/` - Flutter application (Android 15+ / iOS)
+- `apps/mobile/` - Expo React Native application
 - `api/` - NestJS backend API
+- `apps/web/` - Web game client
 
 ## Tech Stack
 
 ### Mobile
-- Flutter (Dart)
-- Riverpod (state management)
-- go_router (navigation)
-- Dio (HTTP client)
-- flutter_animate (animations)
+- React Native
+- Expo
+- Expo Router
+- React Native Reanimated
+- Zustand
+- React Native WebView
 - Supabase (Auth & Database)
 
 ### Backend
@@ -25,9 +27,9 @@ Monorepo project with Flutter mobile app and NestJS API backend.
 
 ### Mobile
 ```bash
-cd mobile
-flutter pub get
-flutter run
+cd apps/mobile
+npm install
+npm run start
 ```
 
 ### API

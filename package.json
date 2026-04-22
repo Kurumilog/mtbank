@@ -11,5 +11,11 @@
     "web": "npm run dev --prefix apps/web",
     "telegram": "npm run dev --prefix apps/telegram",
     "telegram:bot": "npm run bot --prefix apps/telegram"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~55.0.17",
+    "react": "19.2.0",
+    "react-native": "0.83.6"
   }
 }

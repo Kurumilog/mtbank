@@ -225,7 +225,7 @@ apps/web/src/
 
 ### Не проверено (нужно сделать живое тестирование)
 - Реальные pointer-swipes на touch-устройстве (использовал keyboard-эмуляцию).
-- Работа внутри WebView (React Native / Flutter `WebView`) — там бывают
+- Работа внутри WebView (React Native `WebView`) — там бывают
   особенности с `touch-action` и `pointer-events`.
 - Работа в Telegram Mini App (нужен `Telegram.WebApp.ready()` вызов — уже есть
   в `hostBridge`).
@@ -334,7 +334,7 @@ npm run build --prefix apps/web
 ### Пробросить звёзды в банкинг
 В `GameScreen.tsx` или в `useGameStore.finishLevel` уже есть точка для
 вызова `createHostBridge().send("game:state", { totalStars, levelId, stars })`.
-На нативной стороне (React Native WebView / Flutter InAppWebView) нужно
+На нативной стороне (React Native WebView) нужно
 слушать `onMessage` и обновлять счётчик звёзд в UI банка.
 
 ---
