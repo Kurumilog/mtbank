@@ -70,3 +70,12 @@ opencode.json
 .github/
 skills-lock.json
 gha-creds-*.json
+-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
