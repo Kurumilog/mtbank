@@ -1,0 +1,12 @@
+{
+  "name": "mtbank",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "apps/web"
+  ],
+  "scripts": {
+    "mobile": "npm run start --prefix apps/mobile",
+    "web": "npm run dev --prefix apps/web"
+  }
+}

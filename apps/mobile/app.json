@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "MTBank",
+    "slug": "mtbank-mobile",
+    "scheme": "mtbank",
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ]
+  }
+}
