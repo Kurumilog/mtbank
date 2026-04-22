@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { DEFAULT_CHARACTER_ID } from "@/core/characters/registry";
 import type { LevelResult } from "@/core/game/types";
 
 import type { GamePhase, GameState, LevelProgress } from "./gameState";
@@ -11,6 +12,7 @@ interface GameStore extends GameState {
   setPhase: (phase: GamePhase) => void;
   setSessionStars: (collected: number, total: number) => void;
   finishLevel: (result: LevelResult) => void;
+  selectCharacter: (characterId: string) => void;
   /** Returns the best rating achieved on a level (0 if not completed). */
   getStarsForLevel: (levelId: number) => number;
   /** Total stars across all levels — the number surfaced in mobile banking. */
@@ -23,6 +25,7 @@ const initialState: GameState = {
   sessionStars: 0,
   sessionStarsTotal: 0,
   levelProgress: {},
+  selectedCharacterId: DEFAULT_CHARACTER_ID,
 };
 
 export const useGameStore = create<GameStore>()(
@@ -51,6 +54,8 @@ export const useGameStore = create<GameStore>()(
       setSessionStars: (collected, total) =>
         set({ sessionStars: collected, sessionStarsTotal: total }),
 
+      selectCharacter: (characterId) => set({ selectedCharacterId: characterId }),
+
       finishLevel: (result) => {
         const existing = get().levelProgress[result.levelId];
         const nextProgress: LevelProgress = {
@@ -77,7 +82,10 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: "mtbank-game-progress-v1",
-      partialize: (state) => ({ levelProgress: state.levelProgress }),
+      partialize: (state) => ({
+        levelProgress: state.levelProgress,
+        selectedCharacterId: state.selectedCharacterId,
+      }),
     },
   ),
 );

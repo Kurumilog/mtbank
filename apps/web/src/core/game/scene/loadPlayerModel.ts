@@ -1,13 +1,7 @@
-import {
-  AbstractMesh,
-  Quaternion,
-  Scene,
-  SceneLoader,
-  Vector3,
-} from "@babylonjs/core";
+import { AbstractMesh, Quaternion, Scene, SceneLoader, Vector3 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 
-import blobModelUrl from "../../../../../../shared/assets/models/blob.glb?url";
+import { resolveCharacterModelUrl } from "@/core/characters/registry";
 
 import { GAME_CONSTANTS } from "../constants";
 
@@ -17,17 +11,20 @@ export interface LoadedPlayerModel {
 }
 
 /**
- * Loads the blob.glb character model and returns its root mesh.
- *
- * The model is normalized so its visual size is roughly one maze cell and
- * its pivot sits on the floor — the caller only needs to move `root.position`.
+ * Loads the .glb character model referenced by `characterId` and returns
+ * its root mesh. Falls back to the default `blob` model if the requested
+ * character has no real asset yet.
  */
-export async function loadPlayerModel(scene: Scene): Promise<LoadedPlayerModel> {
-  const result = await SceneLoader.ImportMeshAsync("", "", blobModelUrl, scene);
+export async function loadPlayerModel(
+  scene: Scene,
+  characterId: string,
+): Promise<LoadedPlayerModel> {
+  const modelUrl = resolveCharacterModelUrl(characterId);
+  const result = await SceneLoader.ImportMeshAsync("", "", modelUrl, scene);
   const root = result.meshes[0];
 
   if (!root) {
-    throw new Error("blob.glb did not contain a root mesh");
+    throw new Error(`Character model "${characterId}" has no root mesh`);
   }
 
   // Normalize scale so the character visually fits a single maze cell.

@@ -8,6 +8,7 @@ import { colors } from "@/shared/theme/colors";
 
 interface GameCanvasProps {
   level: LevelData;
+  characterId: string;
   onStarsChanged: (collected: number, total: number) => void;
   onLevelComplete: (result: LevelResult) => void;
   onReady: () => void;
@@ -17,6 +18,7 @@ interface GameCanvasProps {
 
 export function GameCanvas({
   level,
+  characterId,
   onStarsChanged,
   onLevelComplete,
   onReady,
@@ -50,7 +52,7 @@ export function GameCanvas({
       });
 
       try {
-        runner = await runLevel(engine, canvas, level, {
+        runner = await runLevel(engine, canvas, level, characterId, {
           onStarsChanged,
           onLevelComplete,
           onReady,
@@ -69,9 +71,9 @@ export function GameCanvas({
       runner?.dispose();
       engine?.dispose();
     };
-    // resetKey triggers a full remount-like re-run of the effect.
+    // resetKey / characterId trigger a full remount-like re-run of the effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level, resetKey]);
+  }, [level, resetKey, characterId]);
 
   return (
     <div ref={containerRef} style={styles.container} data-testid="game-canvas-container">
