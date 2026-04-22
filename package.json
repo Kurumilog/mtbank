@@ -3,10 +3,13 @@
   "private": true,
   "workspaces": [
     "apps/mobile",
-    "apps/web"
+    "apps/web",
+    "apps/telegram"
   ],
   "scripts": {
     "mobile": "npm run start --prefix apps/mobile",
-    "web": "npm run dev --prefix apps/web"
+    "web": "npm run dev --prefix apps/web",
+    "telegram": "npm run dev --prefix apps/telegram",
+    "telegram:bot": "npm run bot --prefix apps/telegram"
   }
 }
